@@ -4,7 +4,17 @@ import { useState, useRef, useCallback, useEffect } from "react";
 const BRAND = { turquoise: "#2BBFBF", teal: "#003d40", sand: "#c8a97e" };
 
 const MODE_DEFS = {
-  business:  { label:"Business",  emoji:"💼", color:"#2BBFBF", gradient:"linear-gradient(145deg,#003d40,#006d72,#2BBFBF)", links:["💾 Save My Contact","📅 Book a Call","🔗 LinkedIn","🌐 Website","💳 Venmo"] },
+  business:  { 
+    label:"Business",  emoji:"💼", color:"#2BBFBF", 
+    gradient:"linear-gradient(145deg,#003d40,#006d72,#2BBFBF)", 
+    links:[
+      { label:"💾 Save My Contact", action:"save-vcf" },
+      { label:"🔗 LinkedIn", url:"https://www.linkedin.com/in/petra-coastify-16b3a0397?utm_source=share_via&utm_content=profile&utm_medium=member_android" },
+      { label:"💳 Venmo", url:"https://www.venmo.com/u/coastify" },
+      { label:"📸 Instagram", url:"https://instagram.com/coastify_org" },
+      { label:"🌐 Website", url:"https://www.coastify.org" },
+    ]
+  },
   social:    { label:"Social",    emoji:"🖤", color:"#ff4fa3", gradient:"linear-gradient(145deg,#1a0010,#6b0040,#ff4fa3)", links:["📸 Instagram","🎵 Spotify","🎤 TikTok","📷 Photo Dump","💬 Text Me"] },
   portfolio: { label:"Portfolio", emoji:"🎨", color:"#a78bfa", gradient:"linear-gradient(145deg,#0d1b2a,#2d1b5a,#a78bfa)", links:["🖼 View Gallery","▶️ Watch Reel","⭐ Testimonials","💰 Pricing","📩 Book Now"] },
   event:     { label:"Event",     emoji:"🎉", color:"#ff6b6b", gradient:"linear-gradient(145deg,#1a0030,#5a0050,#ff6b6b)", links:["🎁 Exclusive Offer","🎟 Enter Giveaway","📅 Schedule Demo","🔗 Connect"], live:true },
@@ -101,33 +111,18 @@ function CardScanner({ onExtracted, onClose, accentColor }) {
         const base64 = dataUrl.split(",")[1];
         const mediaType = file.type || "image/jpeg";
 
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
+        const response = await fetch("/api/scan-card", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 400,
-            messages: [{
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  source: { type: "base64", media_type: mediaType, data: base64 },
-                },
-                {
-                  type: "text",
-                  text: `Extract contact information from this business card image. Return ONLY valid JSON with these exact keys (use empty string "" if not found): name, company, role, email, phone, website, instagram. No markdown, no explanation, just the JSON object.`,
-                },
-              ],
-            }],
-          }),
+          body: JSON.stringify({ base64, mediaType }),
         });
 
-        const data = await response.json();
-        const raw = data.content?.[0]?.text ?? "{}";
-        const clean = raw.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(clean);
-        setExtracted(parsed);
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || payload.details || "Card scan failed.");
+        }
+
+        setExtracted(payload);
         setScanPhase("done");
       } catch (err) {
         setErrorMsg("Couldn't read the card clearly. Try a better-lit photo.");
@@ -527,6 +522,27 @@ function TapPage({ profile, mode }) {
   const handleCaptureComplete = () => setTapPhase("profile");
   const handleSkip = () => setTapPhase("profile");
 
+  const downloadVCF = () => {
+    const vcf = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nORG:Coastify\nEMAIL:info@coastify.org\nTEL:+1 (484) 649-4326\nURL:https://www.coastify.org\nX-SOCIAL-PROFILE;TYPE=LINKEDIN:https://www.linkedin.com/in/petra-coastify-16b3a0397\nX-SOCIAL-PROFILE;TYPE=INSTAGRAM:https://instagram.com/coastify_org\nEND:VCARD`;
+    const blob = new Blob([vcf], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${profile.name}-coastify.vcf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLinkClick = (link) => {
+    if (link.action === "save-vcf") {
+      downloadVCF();
+    } else if (link.url) {
+      window.open(link.url, "_blank");
+    }
+  };
+
+  const getLinkLabel = (link) => typeof link === "string" ? link : link.label;
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -592,7 +608,10 @@ function TapPage({ profile, mode }) {
 
           <div style={{ width:"100%", display:"flex", flexDirection:"column", gap:10, marginTop:4 }}>
             {m.links.map((link, i) => (
-              <div key={link} style={{
+              <div 
+                key={typeof link === "string" ? link : link.label}
+                onClick={() => handleLinkClick(link)}
+                style={{
                 background: i===0 ? m.color : "rgba(255,255,255,0.13)",
                 borderRadius:14, padding:"15px 20px",
                 color: i===0 ? "#000" : "#fff",
@@ -600,7 +619,17 @@ function TapPage({ profile, mode }) {
                 textAlign:"center", cursor:"pointer",
                 boxShadow: i===0 ? `0 6px 28px ${m.color}55` : "none",
                 animation:`up .5s ease ${.1+i*.09}s both`,
-              }}>{link}</div>
+                transition: "all .2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = `0 8px 32px ${m.color}66`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = i===0 ? `0 6px 28px ${m.color}55` : "none";
+              }}
+              >{getLinkLabel(link)}</div>
             ))}
           </div>
 
