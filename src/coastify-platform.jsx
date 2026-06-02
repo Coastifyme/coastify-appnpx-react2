@@ -176,6 +176,21 @@ function CardScanner({ onExtracted, onClose, accentColor }) {
         </div>
 
         <div style={{ padding: 20 }}>
+          {scanPhase === "error" && errorMsg && (
+            <div style={{
+              marginBottom: 18,
+              padding: "14px 16px",
+              borderRadius: 16,
+              background: "#4e1b1b",
+              border: "1px solid #7f2b2b",
+              color: "#ffe6e6",
+              fontSize: 13,
+              lineHeight: 1.4,
+            }}>
+              <strong>AI error:</strong> {errorMsg}
+            </div>
+          )}
+
           {/* IDLE: upload prompt */}
           {scanPhase === "idle" && (
             <div>

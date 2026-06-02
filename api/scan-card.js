@@ -6,6 +6,40 @@ function sanitizeJson(raw) {
   return JSON.parse(match ? match[0] : cleaned);
 }
 
+async function uploadImageToSupabase(base64, mediaType) {
+  const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  if (!SUPABASE_URL || !SUPABASE_KEY || !bucket) return null;
+
+  const extension = mediaType.split("/")[1] || "jpg";
+  const fileName = `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+  const path = `card-uploads/${fileName}`;
+  const body = Buffer.from(base64, "base64");
+  const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(bucket)}/${encodeURIComponent(path)}`;
+
+  const response = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": mediaType,
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.warn("Supabase storage upload failed:", response.status, text);
+    return null;
+  }
+
+  return {
+    bucket,
+    path,
+    publicUrl: `${SUPABASE_URL}/storage/v1/object/public/${encodeURIComponent(bucket)}/${encodeURIComponent(path)}`,
+  };
+}
+
 async function extractWithGemini(base64, mediaType) {
   const { google } = await import('@ai-sdk/google');
   const { generateText } = await import('ai');
@@ -51,14 +85,16 @@ async function handler(req, res) {
     if (!base64) return res.status(400).json({ error: 'Missing base64 payload' });
     if (!mediaType) return res.status(400).json({ error: 'Missing mediaType' });
 
+    const storageInfo = await uploadImageToSupabase(base64, mediaType);
+
     if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       const result = await extractWithGemini(base64, mediaType);
-      return res.json(result);
+      return res.json({ ...result, storageInfo });
     }
 
     if (process.env.OPENAI_API_KEY) {
       const result = await extractWithOpenAI(base64, mediaType);
-      return res.json(result);
+      return res.json({ ...result, storageInfo });
     }
 
     return res.status(400).json({ error: 'No supported AI provider is configured. Add GOOGLE_GENERATIVE_AI_API_KEY or OPENAI_API_KEY.' });
