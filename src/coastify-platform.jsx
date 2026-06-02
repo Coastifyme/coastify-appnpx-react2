@@ -11,14 +11,14 @@ const MODE_DEFS = {
       { label:"💾 Save My Contact", action:"save-vcf" },
       { label:"🔗 LinkedIn", url:"https://www.linkedin.com/in/petra-coastify-16b3a0397?utm_source=share_via&utm_content=profile&utm_medium=member_android" },
       { label:"💳 Venmo", url:"https://www.venmo.com/u/coastify" },
-      { label:"📸 Instagram", url:"https://instagram.com/coastify_org" },
+      { label:"📸 Instagram", url:"https://www.instagram.com/coastify_org?igsh=emVrdHRrdTU3a3Rz" },
       { label:"🌐 Website", url:"https://www.coastify.org" },
     ]
   },
   social:    { label:"Social",    emoji:"🖤", color:"#ff4fa3", gradient:"linear-gradient(145deg,#1a0010,#6b0040,#ff4fa3)", links:[
       { label:"📸 Instagram", url:"https://www.instagram.com/coastify_org?igsh=emVrdHRrdTU3a3Rz" },
-      { label:"📘 Facebook", url:"https://www.facebook.com/profile.php?id=61582120389866" },
-      { label:"🧵 Threads", url:"https://www.threads.com/@coastify_org" },
+      { label:"📘 Facebook", url:"https://www.facebook.com/profile.php?id=6158212038966" },
+      { label:"🧵 Threads", url:"https://www.threads.net/@coastify_org" },
       { label:"🎧 Coastify Song 1", url:"https://suno.com/s/YIZGFJUNarTt4xip" },
       { label:"🎧 Coastify Song 2", url:"https://suno.com/s/yO1vX6xI0HAcDcYa" },
       { label:"🎧 Coastify Song 3", url:"https://suno.com/s/nULKLDMRcvbyFz2G" },
@@ -530,7 +530,7 @@ function TapPage({ profile, mode }) {
   const handleSkip = () => setTapPhase("profile");
 
   const downloadVCF = () => {
-    const vcf = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nORG:Coastify\nEMAIL:info@coastify.org\nTEL:+1 (484) 649-4326\nURL:https://www.coastify.org\nX-SOCIAL-PROFILE;TYPE=LINKEDIN:https://www.linkedin.com/in/petra-coastify-16b3a0397\nX-SOCIAL-PROFILE;TYPE=INSTAGRAM:https://instagram.com/coastify_org\nEND:VCARD`;
+    const vcf = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nORG:Coastify\nEMAIL:info@coastify.org\nTEL:+1 (484) 649-4326\nURL:https://www.coastify.org\nX-SOCIAL-PROFILE;TYPE=LINKEDIN:https://www.linkedin.com/in/petra-coastify-16b3a0397\nX-SOCIAL-PROFILE;TYPE=INSTAGRAM:https://www.instagram.com/coastify_org?igsh=emVrdHRrdTU3a3Rz\nEND:VCARD`;
     const blob = new Blob([vcf], { type: "text/vcard" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
