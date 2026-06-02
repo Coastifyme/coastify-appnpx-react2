@@ -15,7 +15,14 @@ const MODE_DEFS = {
       { label:"🌐 Website", url:"https://www.coastify.org" },
     ]
   },
-  social:    { label:"Social",    emoji:"🖤", color:"#ff4fa3", gradient:"linear-gradient(145deg,#1a0010,#6b0040,#ff4fa3)", links:["📸 Instagram","🎵 Spotify","🎤 TikTok","📷 Photo Dump","💬 Text Me"] },
+  social:    { label:"Social",    emoji:"🖤", color:"#ff4fa3", gradient:"linear-gradient(145deg,#1a0010,#6b0040,#ff4fa3)", links:[
+      { label:"📸 Instagram", url:"https://www.instagram.com/coastify_org?igsh=emVrdHRrdTU3a3Rz" },
+      { label:"📘 Facebook", url:"https://www.facebook.com/profile.php?id=61582120389866" },
+      { label:"🧵 Threads", url:"https://www.threads.com/@coastify_org" },
+      { label:"🎧 Coastify Song 1", url:"https://suno.com/s/YIZGFJUNarTt4xip" },
+      { label:"🎧 Coastify Song 2", url:"https://suno.com/s/yO1vX6xI0HAcDcYa" },
+      { label:"🎧 Coastify Song 3", url:"https://suno.com/s/nULKLDMRcvbyFz2G" },
+    ] },
   portfolio: { label:"Portfolio", emoji:"🎨", color:"#a78bfa", gradient:"linear-gradient(145deg,#0d1b2a,#2d1b5a,#a78bfa)", links:["🖼 View Gallery","▶️ Watch Reel","⭐ Testimonials","💰 Pricing","📩 Book Now"] },
   event:     { label:"Event",     emoji:"🎉", color:"#ff6b6b", gradient:"linear-gradient(145deg,#1a0030,#5a0050,#ff6b6b)", links:["🎁 Exclusive Offer","🎟 Enter Giveaway","📅 Schedule Demo","🔗 Connect"], live:true },
 };
