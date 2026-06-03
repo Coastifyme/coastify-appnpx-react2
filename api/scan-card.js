@@ -6,6 +6,11 @@ function sanitizeJson(raw) {
   return JSON.parse(match ? match[0] : cleaned);
 }
 
+// Ensure the Google client library picks up the configured key if provided
+if (process.env.GOOGLE_GENERATIVE_AI_API_KEY && !process.env.GOOGLE_API_KEY) {
+  process.env.GOOGLE_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+}
+
 async function uploadImageToSupabase(base64, mediaType) {
   const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -52,31 +57,6 @@ async function extractWithGemini(base64, mediaType) {
   return sanitizeJson(raw);
 }
 
-async function extractWithOpenAI(base64, mediaType) {
-  const openaiApiKey = process.env.OPENAI_API_KEY;
-  if (!openaiApiKey) throw new Error('OpenAI API key is not configured.');
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${openaiApiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4.1-mini',
-      messages: [
-        { role: 'system', content: PROMPT },
-        { role: 'user', content: `Image base64 (media_type=${mediaType}):\n${base64}` },
-      ],
-      temperature: 0.0,
-      max_tokens: 800,
-    }),
-  });
-
-  const data = await response.json();
-  const raw = data.choices?.[0]?.message?.content ?? JSON.stringify(data ?? {});
-  return sanitizeJson(raw);
-}
-
 async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -87,17 +67,12 @@ async function handler(req, res) {
 
     const storageInfo = await uploadImageToSupabase(base64, mediaType);
 
-    if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      const result = await extractWithGemini(base64, mediaType);
-      return res.json({ ...result, storageInfo });
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY && !process.env.GOOGLE_API_KEY) {
+      return res.status(400).json({ error: 'Google Generative AI is not configured. Set GOOGLE_GENERATIVE_AI_API_KEY.' });
     }
 
-    if (process.env.OPENAI_API_KEY) {
-      const result = await extractWithOpenAI(base64, mediaType);
-      return res.json({ ...result, storageInfo });
-    }
-
-    return res.status(400).json({ error: 'No supported AI provider is configured. Add GOOGLE_GENERATIVE_AI_API_KEY or OPENAI_API_KEY.' });
+    const result = await extractWithGemini(base64, mediaType);
+    return res.json({ ...result, storageInfo });
   } catch (err) {
     return res.status(500).json({ error: 'AI extraction failed', details: err.message });
   }

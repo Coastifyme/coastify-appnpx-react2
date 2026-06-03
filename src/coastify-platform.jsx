@@ -529,7 +529,324 @@ function LeadCapture({ mode, profile, onComplete, onSkip }) {
   );
 }
 
-// ─── TAP REVEAL + PROFILE PAGE ────────────────────────────────────────────────
+function ProfileRegistration({ onCreated }) {
+  const [form, setForm] = useState({
+    name: "",
+    role: "",
+    tagline: "",
+    email: "",
+    instagram: "",
+    facebook: "",
+    threads: "",
+    linkedin: "",
+    website: "",
+    emoji: "✨",
+    color: "#ff4fa3",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const canSubmit = form.name.trim() && form.role.trim();
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/profiles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || payload.details || "Failed to create profile.");
+      }
+
+      onCreated(payload);
+    } catch (err) {
+      setError(err?.message || "Unable to create profile.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{
+      width: "min(540px, 100%)",
+      background: "#0f1416",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 28,
+      padding: 28,
+      marginBottom: 36,
+    }}>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ color: "#fff", fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Create your own Coastify profile</div>
+        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, lineHeight: 1.6 }}>
+          Register a unique profile and share it with your network. After creation you’ll get a dedicated link at <strong>/u/your-slug</strong>.
+        </div>
+      </div>
+
+      {error && (
+        <div style={{
+          marginBottom: 18,
+          padding: "14px 16px",
+          borderRadius: 16,
+          background: "#4e1b1b",
+          border: "1px solid #7f2b2b",
+          color: "#ffe6e6",
+          fontSize: 13,
+          lineHeight: 1.4,
+        }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+        {[
+          { key: "name", label: "Name", placeholder: "Alex Johnson" },
+          { key: "role", label: "Role", placeholder: "Founder · NewBrand" },
+          { key: "tagline", label: "Tagline", placeholder: "Wearable identity for modern creators" },
+          { key: "email", label: "Email", placeholder: "alex@newbrand.com" },
+          { key: "instagram", label: "Instagram", placeholder: "https://www.instagram.com/yourname" },
+          { key: "facebook", label: "Facebook", placeholder: "https://www.facebook.com/yourname" },
+          { key: "threads", label: "Threads", placeholder: "https://www.threads.net/@yourname" },
+          { key: "linkedin", label: "LinkedIn", placeholder: "https://www.linkedin.com/in/yourname" },
+          { key: "website", label: "Website", placeholder: "https://yourbrand.com" },
+        ].map(field => (
+          <label key={field.key} style={{ display: "flex", flexDirection: "column", gap: 6, color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
+            {field.label}
+            <input
+              value={form[field.key]}
+              onChange={e => setForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+              placeholder={field.placeholder}
+              style={{
+                width: "100%",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.05)",
+                color: "#fff",
+                padding: "13px 14px",
+                fontSize: 14,
+              }}
+            />
+          </label>
+        ))}
+      </div>
+
+      <button
+        onClick={handleSubmit}
+        disabled={!canSubmit || submitting}
+        style={{
+          width: "100%",
+          marginTop: 18,
+          background: canSubmit ? "#ff4fa3" : "rgba(255,255,255,0.08)",
+          color: canSubmit ? "#000" : "rgba(255,255,255,0.4)",
+          border: "none",
+          borderRadius: 16,
+          padding: "16px",
+          fontWeight: 700,
+          cursor: canSubmit ? "pointer" : "not-allowed",
+          opacity: submitting ? 0.95 : 1,
+        }}>
+        {submitting ? <Spinner color="#000" size={18} /> : "Create my profile"}
+      </button>
+    </div>
+  );
+}
+
+function ProfilePage({ slug, profile, loading, error, onBack }) {
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#080c0d" }}>
+        <div style={{ textAlign: "center", color: "#fff" }}>
+          <Spinner color="#ff4fa3" size={28} />
+          <div style={{ marginTop: 16 }}>Loading profile…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#080c0d", padding: 24 }}>
+        <div style={{ maxWidth: 520, width: "100%", background: "#0f1416", borderRadius: 24, padding: 28, border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ color: "#ff6b6b", fontWeight: 700, marginBottom: 12 }}>Profile not found</div>
+          <div style={{ color: "rgba(255,255,255,0.65)", marginBottom: 20 }}>{error}</div>
+          <button onClick={onBack} style={{ background: "#2bbfbf", border: "none", borderRadius: 14, padding: "12px 18px", color: "#000", fontWeight: 700 }}>
+            Return home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <div style={{ position: "fixed", top: 16, left: 16, zIndex: 9999 }}>
+        <button onClick={onBack} style={{ background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", borderRadius: 14, padding: "10px 14px", cursor: "pointer" }}>
+          ← Home
+        </button>
+      </div>
+      <TapPage key={slug} profile={profile} mode={profile.activeMode || "social"} />
+    </>
+  );
+}
+
+function CoastifyApp() {
+  const [route, setRoute] = useState({ type: "home", slug: null });
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [activeMode, setActiveMode] = useState("business");
+  const [runKey, setRunKey] = useState(0);
+  const [started, setStarted] = useState(false);
+
+  const fetchProfile = useCallback(async (slug) => {
+    setLoading(true);
+    setError("");
+    setProfile(null);
+
+    try {
+      const response = await fetch(`/api/profiles?slug=${encodeURIComponent(slug)}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.details || "Profile not found.");
+      }
+      setProfile(data.profile);
+      setActiveMode(data.profile.activeMode || "social");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const parseRoute = useCallback(() => {
+    const path = window.location.pathname || "/";
+    if (path.startsWith("/u/")) {
+      const slug = path.slice(3).replace(/\/$/, "");
+      if (slug) {
+        setRoute({ type: "profile", slug });
+        fetchProfile(slug);
+        return;
+      }
+    }
+    setRoute({ type: "home", slug: null });
+    setProfile(null);
+    setError("");
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    parseRoute();
+  }, [parseRoute]);
+
+  useEffect(() => {
+    const onPop = () => parseRoute();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [parseRoute]);
+
+  const handleCreate = (payload) => {
+    const slug = payload.slug;
+    window.history.pushState({}, "", `/u/${slug}`);
+    setRoute({ type: "profile", slug });
+    setProfile(payload.profile);
+    setActiveMode(payload.profile.activeMode || "social");
+  };
+
+  const handleBack = () => {
+    window.history.pushState({}, "", "/");
+    setRoute({ type: "home", slug: null });
+    setProfile(null);
+    setError("");
+  };
+
+  if (route.type === "profile") {
+    return <ProfilePage slug={route.slug} profile={profile} loading={loading} error={error} onBack={handleBack} />;
+  }
+
+  if (started) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <TapPage key={runKey} profile={PROFILE} mode={activeMode} />
+        <button
+          onClick={() => setStarted(false)}
+          style={{
+            position: "fixed", top: 16, right: 16, zIndex: 9999,
+            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "rgba(255,255,255,0.6)", borderRadius: 20,
+            padding: "8px 16px", fontSize: 12, fontWeight: 600,
+          }}>
+          ← Demo Menu
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#080c0d", color: "#fff", fontFamily: "'Helvetica Neue', Helvetica, sans-serif" }}>
+      <style>{CSS}</style>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 24, alignItems: "start" }}>
+          <div>
+            <div style={{ marginBottom: 24, animation: "up .4s ease" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#2BBFBF,#003d40)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 18, color: "#fff" }}>C</div>
+                <div style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: 22 }}>Coastify</div>
+              </div>
+              <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(28px,5vw,42px)", margin: 0 }}>Build a unique profile link for your network.</h1>
+              <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 15, lineHeight: 1.7, maxWidth: 560, marginTop: 12 }}>
+                Create a multi-profile Coastify page that users can open at <strong>/u/your-slug</strong>. The platform now supports unique profile registration and dynamic profile pages.
+              </p>
+            </div>
+            <ProfileRegistration onCreated={handleCreate} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ background: "#0f1416", borderRadius: 28, padding: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Demo</div>
+              <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, margin: "0 0 12px" }}>Preview the tap experience</h2>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.7 }}>Choose a mode to simulate a bracelet tap and see how the profile reveal works.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginTop: 20 }}>
+                {Object.entries(MODE_DEFS).map(([key, m], i) => (
+                  <button key={key} onClick={() => { setActiveMode(key); setRunKey(k => k + 1); setStarted(true); }} style={{
+                    background: `${m.color}12`,
+                    border: `1.5px solid ${m.color}33`,
+                    borderRadius: 18, padding: "18px 16px",
+                    cursor: "pointer", textAlign: "left",
+                    transition: "all .22s cubic-bezier(0.4,0,0.2,1)",
+                    animation: `up .4s ease ${0.05 + i * 0.05}s both`,
+                  }}>
+                    <div style={{ fontSize: 26, marginBottom: 8 }}>{m.emoji}</div>
+                    <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, fontFamily: "Georgia, serif" }}>{m.label}</div>
+                    <div style={{ color: m.color, fontSize: 11, marginTop: 3, fontWeight: 600 }}>{key === "event" ? "● LIVE" : "Tap to simulate"}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: "#0f1416", borderRadius: 28, padding: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Quick Start</div>
+              <ul style={{ paddingLeft: 18, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, fontSize: 14 }}>
+                <li>Enter your name, role and social links.</li>
+                <li>Create your profile and get a unique `/u/slug` link.</li>
+                <li>Share the generated link with your network.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── TAP REVEAL + PROFILE PAGE ────────────────────────────────────────────────────────────────
 function TapPage({ profile, mode }) {
   const m = MODE_DEFS[mode];
   const [tapPhase, setTapPhase] = useState("idle");      // idle | ring | capture | profile
@@ -545,7 +862,23 @@ function TapPage({ profile, mode }) {
   const handleSkip = () => setTapPhase("profile");
 
   const downloadVCF = () => {
-    const vcf = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nORG:Coastify\nEMAIL:info@coastify.org\nTEL:+1 (484) 649-4326\nURL:https://www.coastify.org\nX-SOCIAL-PROFILE;TYPE=LINKEDIN:https://www.linkedin.com/in/petra-coastify-16b3a0397\nX-SOCIAL-PROFILE;TYPE=INSTAGRAM:https://www.instagram.com/coastify_org?igsh=emVrdHRrdTU3a3Rz\nEND:VCARD`;
+    const lines = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${profile.name}`,
+      profile.role ? `ORG:${profile.role}` : null,
+      `EMAIL:${profile.email || "info@coastify.org"}`,
+      profile.phone ? `TEL:${profile.phone}` : null,
+      `URL:${profile.website || "https://www.coastify.org"}`,
+    ].filter(Boolean);
+
+    if (profile.linkedin) lines.push(`X-SOCIAL-PROFILE;TYPE=LINKEDIN:${profile.linkedin}`);
+    if (profile.instagram) lines.push(`X-SOCIAL-PROFILE;TYPE=INSTAGRAM:${profile.instagram}`);
+    if (profile.facebook) lines.push(`X-SOCIAL-PROFILE;TYPE=FACEBOOK:${profile.facebook}`);
+    if (profile.threads) lines.push(`X-SOCIAL-PROFILE;TYPE=THREADS:${profile.threads}`);
+    lines.push("END:VCARD");
+
+    const vcf = lines.join("\n");
     const blob = new Blob([vcf], { type: "text/vcard" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -629,7 +962,7 @@ function TapPage({ profile, mode }) {
           </div>
 
           <div style={{ width:"100%", display:"flex", flexDirection:"column", gap:10, marginTop:4 }}>
-            {m.links.map((link, i) => (
+            {(profile.links ?? m.links).map((link, i) => (
               <div 
                 key={typeof link === "string" ? link : link.label}
                 onClick={() => handleLinkClick(link)}
@@ -676,80 +1009,4 @@ function TapPage({ profile, mode }) {
   );
 }
 
-// ─── DEMO SHELL ───────────────────────────────────────────────────────────────
-// Lets you preview all modes and re-trigger the tap flow
-export default function CoastifyDemo() {
-  const [activeMode, setActiveMode] = useState("business");
-  const [runKey, setRunKey] = useState(0);
-  const [started, setStarted] = useState(false);
-
-  const triggerTap = (mode) => {
-    setActiveMode(mode);
-    setRunKey(k => k + 1);
-    setStarted(true);
-  };
-
-  if (started) {
-    return (
-      <>
-        <style>{CSS}</style>
-        <TapPage key={runKey} profile={PROFILE} mode={activeMode} />
-        {/* Reset overlay button */}
-        <button
-          onClick={() => setStarted(false)}
-          style={{
-            position:"fixed", top:16, right:16, zIndex:9999,
-            background:"rgba(0,0,0,0.5)", backdropFilter:"blur(8px)",
-            border:"1px solid rgba(255,255,255,0.15)",
-            color:"rgba(255,255,255,0.6)", borderRadius:20,
-            padding:"8px 16px", fontSize:12, fontWeight:600,
-          }}>
-          ← Demo Menu
-        </button>
-      </>
-    );
-  }
-
-  return (
-    <div style={{ minHeight:"100vh", background:"#080c0d", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"40px 20px", fontFamily:"'Helvetica Neue', Helvetica, sans-serif" }}>
-      <style>{CSS}</style>
-
-      <div style={{ textAlign:"center", marginBottom:48, animation:"up .4s ease" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:16 }}>
-          <div style={{ width:40, height:40, borderRadius:12, background:"linear-gradient(135deg,#2BBFBF,#003d40)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:18, color:"#fff" }}>C</div>
-          <div style={{ fontFamily:"Georgia, serif", fontWeight:700, fontSize:22, color:"#fff" }}>Coastify</div>
-        </div>
-        <h1 style={{ fontFamily:"Georgia, serif", fontSize:"clamp(26px,5vw,38px)", color:"#fff", marginBottom:10 }}>
-          Smart Lead Capture
-        </h1>
-        <p style={{ color:"rgba(255,255,255,0.4)", fontSize:15, maxWidth:400, lineHeight:1.6 }}>
-          Choose a mode to simulate a bracelet tap.<br />
-          The AI card scanner is fully live.
-        </p>
-      </div>
-
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, width:"min(440px,100%)" }}>
-        {Object.entries(MODE_DEFS).map(([key, m], i) => (
-          <button key={key} onClick={() => triggerTap(key)} style={{
-            background:`${m.color}12`,
-            border:`1.5px solid ${m.color}33`,
-            borderRadius:18, padding:"20px 16px",
-            cursor:"pointer", textAlign:"left",
-            transition:"all .22s cubic-bezier(0.4,0,0.2,1)",
-            animation:`up .4s ease ${.05+i*.06}s both`,
-          }}>
-            <div style={{ fontSize:26, marginBottom:8 }}>{m.emoji}</div>
-            <div style={{ color:"#fff", fontWeight:700, fontSize:14, fontFamily:"Georgia, serif" }}>{m.label}</div>
-            <div style={{ color:m.color, fontSize:11, marginTop:3, fontWeight:600 }}>
-              {key === "event" ? "● LIVE" : "Tap to simulate"}
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div style={{ marginTop:32, color:"rgba(255,255,255,0.2)", fontSize:12, letterSpacing:1, textAlign:"center", animation:"up .4s ease .5s both" }}>
-        coastify.org/u/petra · ✓ No reprogram needed. Ever.
-      </div>
-    </div>
-  );
-}
+export default CoastifyApp;
