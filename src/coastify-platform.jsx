@@ -330,6 +330,18 @@ function CardScanner({ onExtracted, onClose, accentColor }) {
             </div>
           )}
         </div>
+
+        {/* Toggle registration form */}
+        <div style={{ maxWidth: 1200, margin: "12px auto 0", padding: "0 20px", display: 'flex', justifyContent: 'center' }}>
+          <button onClick={() => setShowRegister(s => !s)} style={{
+            background: showRegister ? '#444' : '#ff4fa3',
+            color: showRegister ? '#fff' : '#000',
+            border: 'none', borderRadius: 14, padding: '12px 18px', fontWeight: 700,
+          }}>
+            {showRegister ? 'Hide Registration' : 'Create New Profile'}
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -702,6 +714,7 @@ function CoastifyApp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeMode, setActiveMode] = useState("business");
+  const [showRegister, setShowRegister] = useState(false);
   const [runKey, setRunKey] = useState(0);
   const [started, setStarted] = useState(false);
 
@@ -805,7 +818,9 @@ function CoastifyApp() {
                 Create a multi-profile Coastify page that users can open at <strong>/u/your-slug</strong>. The platform now supports unique profile registration and dynamic profile pages.
               </p>
             </div>
-            <ProfileRegistration onCreated={handleCreate} />
+            {showRegister && (
+              <ProfileRegistration onCreated={handleCreate} />
+            )}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
