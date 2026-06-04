@@ -595,17 +595,37 @@ function ProfileRegistration({
       borderRadius: 28,
       padding: 28,
       marginBottom: 36,
-    }}>
-{/* Only show the registration layout if showRegister is true */}
+   {/* Only show the registration layout if showRegister is true */}
 {showRegister ? (
-  <div style={{ marginBottom: 20 }}>
-    <div style={{ color: "#fff", fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
+  <div style={{ marginBottom: "20px" }}>
+    <div style={{ color: "#fff", fontFamily: "Georgia, serif", fontSize: "20px", fontWeight: 700, marginBottom: "8px" }}>
       Create your own Coastify profile
     </div>
-    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, lineHeight: 1.6 }}>
-      {/* Your existing registration form input fields go here */}
+    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "14px", lineHeight: 1.6 }}>
+      {/* Your existing registration form input fields stay right here */}
     </div>
   </div>
+) : (
+  /* Show ONLY this single clean button under profiles when hidden */
+  <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", marginBottom: "20px" }}>
+    <button
+      onClick={() => setShowRegister(true)}
+      style={{
+        backgroundColor: "#222",
+        color: "#fff",
+        border: "1px solid rgba(255,255,255,0.2)",
+        padding: "10px 20px",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontFamily: "sans-serif",
+        fontSize: "14px",
+        fontWeight: "600"
+      }}
+    >
+      ➕ Create New Profile
+    </button>
+  </div>
+)}
 ) : (
   /* Show ONLY this single clean button under profiles when hidden */
   <div style={{ display: "flex", justifyContent: "center", marginTop: 20, marginBottom: 20 }}>
