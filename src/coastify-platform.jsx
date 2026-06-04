@@ -541,7 +541,9 @@ function LeadCapture({ mode, profile, onComplete, onSkip }) {
   );
 }
 
-function ProfileRegistration({ onCreated }) {
+function ProfileRegistration({
+  const [showRegister, setShowRegister] = useState(false);
+  onCreated }) {
   const [form, setForm] = useState({
     name: "",
     role: "",
@@ -594,13 +596,40 @@ function ProfileRegistration({ onCreated }) {
       padding: 28,
       marginBottom: 36,
     }}>
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ color: "#fff", fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Create your own Coastify profile</div>
-        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, lineHeight: 1.6 }}>
-          Register a unique profile and share it with your network. After creation you’ll get a dedicated link at <strong>/u/your-slug</strong>.
-        </div>
-      </div>
-
+{/* Only show the registration layout if showRegister is true */}
+{showRegister ? (
+  <div style={{ marginBottom: 20 }}>
+    <div style={{ color: "#fff", fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
+      Create your own Coastify profile
+    </div>
+    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, lineHeight: 1.6 }}>
+      {/* Your existing registration form input fields go here */}
+    </div>
+  </div>
+) : (
+  /* Show ONLY this single clean button under profiles when hidden */
+  <div style={{ display: "flex", justifyContent: "center", marginTop: 20, marginBottom: 20 }}>
+    <button
+      onClick={() => setShowRegister(true)}
+      style={{
+        backgroundColor: "#222",
+        color: "#fff",
+        border: "1px solid rgba(255,255,255,0.2)",
+        padding: "10px 20px",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontFamily: "sans-serif",
+        fontSize: "14px",
+        fontWeight: "600",
+        transition: "all 0.2s ease"
+      }}
+      onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#333"}
+      onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#222"}
+    >
+      ➕ Create New Profile
+    </button>
+  </div>
+)}
       {error && (
         <div style={{
           marginBottom: 18,
